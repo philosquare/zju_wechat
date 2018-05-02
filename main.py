@@ -33,6 +33,7 @@ def test_post():
 
 if __name__ == '__main__':
     wechatHandler = WechatHandler()
+    # wechatHandler.create_menu()
     wechatHandler.insert_followers()
     import scheduler
     app.run(host='0.0.0.0', port=5177, debug=False, threaded=True)

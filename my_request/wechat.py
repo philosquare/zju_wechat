@@ -34,3 +34,34 @@ class WechatHandler(object):
         cursor = self.mysql.cursor()
         for openid in self.get_followers():
             cursor.execute(sql, (openid,))
+
+    def create_menu(self):
+        self.wechat_client.menu.create({
+            "button": [
+                {
+                    "type": "click",
+                    "name": "帐号绑定",
+                    "key": "REGISTER"
+                },
+                {
+                    "name": "实验预约",
+                    "sub_button": [
+                        {
+                            "type": "click",
+                            "name": "新F20",
+                            "key": "RESERVE_NF20"
+                        },
+                        {
+                            "type": "click",
+                            "name": "老F20",
+                            "key": "RESERVE_OF20"
+                        },
+                        {
+                            "type": "click",
+                            "name": "FIB",
+                            "key": "RESERVE_FIB"
+                        }
+                    ]
+                }
+            ]
+        })
