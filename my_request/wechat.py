@@ -62,6 +62,21 @@ class WechatHandler(object):
                             "key": "RESERVE_FIB"
                         }
                     ]
+                },
+                {
+                    "name": "预约管理",
+                    "sub_button": [
+                        {
+                            "type": "click",
+                            "name": "预约查询",
+                            "key": "QUERY"
+                        },
+                        {
+                            "type": "click",
+                            "name": "预约删除",
+                            "key": "DELETE"
+                        }
+                    ]
                 }
             ]
         })

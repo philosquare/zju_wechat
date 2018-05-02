@@ -16,6 +16,7 @@ class WechatMsgHandler(object):
         if self.mysql is None:
             self.mysql = pymysql.connect(host=mysql_host, password=mysql_password,
                                          db='wechat_tem', charset='utf8', autocommit=True)
+            return self.mysql
 
     def handle_msg(self, msg):
         print('received message: %s' % msg)
@@ -89,18 +90,44 @@ class WechatMsgHandler(object):
         err_msg = '预约出错！' + rd.get('msg', '未知错误')
         return create_reply(err_msg, msg).render()
 
+    def _verify(self, msg):
+        self.conn_mysql()
+        cursor = self.mysql.cursor()
+        sql = "select account_verified from user_account where openid=%s"
+        cursor.execute(sql, (msg.source,))
+        verified, = cursor.fetchone()
+        if verified == 1:
+            return True
+        return False
+
     def _handle_click_event(self, msg):
         if msg.key == 'REGISTER':
             self.redis.hset(msg.source, 'status', Status.REGISTER_USERNAME)
             self.redis.expire(msg.source, redis_expire_time)
             return create_reply('请输入易约用户名', message=msg).render()
+        if msg.key == 'QUERY':
+            if self._verify(msg) is False:
+                return create_reply('请先绑定帐号，再进行预约查询。', msg).render()
+            reserve = RequestReserve()
+            rd = reserve.query_jobs(msg)
+            if rd.get('code') != 0:
+                return create_reply(rd.get('msg'), msg).render()
+            jobs = []
+            for job in rd.get('jobs'):
+                jobs.append('实验仪器：%s\n实验日期：%s\n开始时间：%s\n结束时间：%s\n预约时间：%s' % (
+                    job.get('instrument'), job.get('reserve_date'), job.get('reserveStartTime'),
+                    job.get('reserveEndTime'), job.get('trigger_time')
+                ))
+            reply = '已设定的预约如下：\n%s' % '\n\n'.join(jobs)
+            return create_reply(reply, msg).render()
+
         if msg.key in ['RESERVE_NF20', 'RESERVE_OF20', 'RESERVE_FIB']:
-            self.conn_mysql()
-            cursor = self.mysql.cursor()
-            sql = "select account_verified from user_account where openid=%s"
-            cursor.execute(sql, (msg.source,))
-            verified, = cursor.fetchone()
-            if verified == 0:
+            # self.conn_mysql()
+            # cursor = self.mysql.cursor()
+            # sql = "select account_verified from user_account where openid=%s"
+            # cursor.execute(sql, (msg.source,))
+            # verified, = cursor.fetchone()
+            if self._verify(msg) is False:
                 return create_reply('请先绑定帐号，再进行预约。', msg).render()
             instrument = {'RESERVE_NF20': Instrument.New_F20.value,
                           'RESERVE_OF20': Instrument.Old_F20.value,
@@ -113,4 +140,4 @@ class WechatMsgHandler(object):
                                'RESERVE_FIB': 'FIB'}.get(msg.key)
             return create_reply(
                 '正在预约仪器：%s\n请输入实验日期 例如：2018-01-01' % instrument_name, msg).render()
-        return ''
+        return create_reply('暂不支持此功能', msg).render()

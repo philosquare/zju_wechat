@@ -12,10 +12,6 @@ class RequestReserve:
         self.mysql = pymysql.connect(host=mysql_host, password=mysql_password,
                                      db='wechat_tem', charset='utf8', autocommit=True)
 
-    def get_all_jobs(self):
-        url = reserve_url + '/api/scheduled_jobs'
-        r = requests.get(url)
-
     def register(self, username, password, msg):
         url = reserve_url + '/api/login_test'
         params = dict(username=username, password=password)
@@ -31,12 +27,28 @@ class RequestReserve:
             return True
         return False
 
-    def reserve(self, instrument, reserve_date, start_time, end_time, msg):
-        openid = msg.source
+    def _get_account(self, openid):
         cursor = self.mysql.cursor()
         sql = "select tem_username, tem_password from user_account where openid=%s"
         cursor.execute(sql, (openid,))
         username, password = cursor.fetchone()
+        return username, password
+
+    def query_jobs(self, msg):
+        openid = msg.source
+        username, password = self._get_account(openid)
+        url = reserve_url + '/api/scheduled_jobs'
+        params = dict(username=username, password=password)
+        r = requests.get(url, params=params)
+        if r.status_code != 200:
+            rd = {'code': 500, 'msg': '服务器内部错误'}
+        else:
+            rd = r.json()
+        return rd
+
+    def reserve(self, instrument, reserve_date, start_time, end_time, msg):
+        openid = msg.source
+        username, password = self._get_account(openid)
         url = reserve_url + '/api/reserve'
         data = dict(username=username, password=password, instrument=instrument,
                     reserve_date=reserve_date, start_time=start_time, end_time=end_time)
