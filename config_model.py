@@ -7,5 +7,6 @@ template_id_remind_f20 = ''
 template_id_remind_fib = ''
 redis_host = 'localhost'
 redis_password = ''
+redis_expire_time = 300
 mysql_host = 'localhost'
 mysql_password = ''
