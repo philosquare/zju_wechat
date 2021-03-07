@@ -1,0 +1,13 @@
+test_token='lifangzhe'
+appid = ''
+secret = ''
+reserve_url = 'http://localhost:17910'
+reserve_port = 80
+template_id_remind_f20 = 'miD52QxODnAweuu1XWMJBMx3ULh9DghxOOP5L6FjW-E'
+template_id_remind_fib = 'TxuPxd9jN8UlKH_J_H54XXK4AkWQ78Ic7IJFHJkBW5M'
+redis_host = 'localhost'
+redis_password = ''
+redis_expire_time = 300
+mysql_host = 'localhost'
+mysql_user = 'lifangzhe'
+mysql_password = ''
